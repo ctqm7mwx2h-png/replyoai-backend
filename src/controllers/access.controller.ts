@@ -7,7 +7,7 @@ export class AccessController {
    * Check access for Instagram page ID
    * POST /api/check-access
    */
-  static async checkAccess(req: Request, res: Response) {
+  static async checkAccess(req: Request, res: Response): Promise<void> {
     try {
       const { instagramPageId } = req.body;
 

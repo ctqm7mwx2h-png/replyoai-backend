@@ -27,7 +27,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(config.api.basePath, routes);
 
 // Root endpoint
-app.get('/', (req, res) => {
+app.get('/', (_req, res) => {
   res.json({
     success: true,
     message: 'ReplyoAI Backend API',
@@ -43,7 +43,7 @@ app.get('/', (req, res) => {
 });
 
 // 404 handler
-app.use('*', (req, res) => {
+app.use('*', (_req, res) => {
   res.status(404).json({
     success: false,
     message: 'Endpoint not found',

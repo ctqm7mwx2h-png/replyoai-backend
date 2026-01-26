@@ -8,7 +8,7 @@ export class OnboardController {
    * Store subscription metadata after payment
    * POST /api/onboard
    */
-  static async onboard(req: Request, res: Response) {
+  static async onboard(req: Request, res: Response): Promise<void> {
     try {
       const { stripeCustomerId, stripeSubscriptionId, plan } = req.body;
 
@@ -46,7 +46,7 @@ export class InstagramController {
    * Connect Instagram page to subscription
    * POST /api/connect-instagram
    */
-  static async connectInstagram(req: Request, res: Response) {
+  static async connectInstagram(req: Request, res: Response): Promise<void> {
     try {
       const { subscriptionId, instagramPageId } = req.body;
 

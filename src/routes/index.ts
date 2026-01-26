@@ -20,7 +20,7 @@ router.post('/connect-instagram', validateRequest(connectInstagramSchema), Insta
 router.post('/check-access', validateRequest(checkAccessSchema), AccessController.checkAccess);
 
 // Health check endpoint
-router.get('/health', (req, res) => {
+router.get('/health', (_req, res) => {
   res.status(200).json({
     success: true,
     message: 'ReplyoAI backend is healthy',

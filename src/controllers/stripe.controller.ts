@@ -2,21 +2,22 @@ import { Request, Response } from 'express';
 import { stripe } from '../utils/stripe.js';
 import { config } from '../config/index.js';
 import { SubscriptionService } from '../services/subscription.service.js';
-import { SubscriptionStatus } from '@prisma/client';
+import type { SubscriptionStatus } from '@prisma/client';
 
 export class StripeController {
   /**
    * Handle Stripe webhook events
    */
-  static async handleWebhook(req: Request, res: Response) {
+  static async handleWebhook(req: Request, res: Response): Promise<void> {
     const sig = req.headers['stripe-signature'] as string;
 
     if (!sig) {
       console.error('Missing Stripe signature');
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Missing Stripe signature',
       });
+      return;
     }
 
     let event;
@@ -30,10 +31,11 @@ export class StripeController {
       );
     } catch (err) {
       console.error('Webhook signature verification failed:', err);
-      return res.status(400).json({
+      res.status(400).json({
         success: false,
         message: 'Webhook signature verification failed',
       });
+      return;
     }
 
     try {
@@ -101,7 +103,7 @@ export class StripeController {
   private static async handleSubscriptionDeleted(subscription: any) {
     await SubscriptionService.updateSubscriptionStatus(
       subscription.id,
-      SubscriptionStatus.CANCELLED
+      'CANCELLED'
     );
 
     console.log(`Subscription ${subscription.id} cancelled`);
@@ -114,7 +116,7 @@ export class StripeController {
     if (invoice.subscription) {
       await SubscriptionService.updateSubscriptionStatus(
         invoice.subscription,
-        SubscriptionStatus.ACTIVE
+        'ACTIVE'
       );
 
       console.log(`Payment succeeded for subscription ${invoice.subscription}`);
@@ -128,7 +130,7 @@ export class StripeController {
     if (invoice.subscription) {
       await SubscriptionService.updateSubscriptionStatus(
         invoice.subscription,
-        SubscriptionStatus.PAST_DUE
+        'PAST_DUE'
       );
 
       console.log(`Payment failed for subscription ${invoice.subscription}`);
@@ -141,18 +143,18 @@ export class StripeController {
   private static mapStripeStatus(stripeStatus: string): SubscriptionStatus {
     switch (stripeStatus) {
       case 'active':
-        return SubscriptionStatus.ACTIVE;
+        return 'ACTIVE';
       case 'canceled':
       case 'cancelled':
-        return SubscriptionStatus.CANCELLED;
+        return 'CANCELLED';
       case 'past_due':
-        return SubscriptionStatus.PAST_DUE;
+        return 'PAST_DUE';
       case 'incomplete':
       case 'incomplete_expired':
       case 'trialing':
       case 'unpaid':
       default:
-        return SubscriptionStatus.PENDING;
+        return 'PENDING';
     }
   }
 }

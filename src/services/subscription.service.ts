@@ -1,5 +1,5 @@
-import { SubscriptionStatus } from '@prisma/client';
 import { prisma } from '../models/index.js';
+import type { SubscriptionStatus } from '@prisma/client';
 
 export class SubscriptionService {
   /**
@@ -15,16 +15,16 @@ export class SubscriptionService {
     return await prisma.subscription.upsert({
       where: { stripeCustomerId },
       update: {
-        stripeSubscriptionId,
+        stripeSubscriptionId: stripeSubscriptionId ?? null,
         plan,
-        status: stripeSubscriptionId ? SubscriptionStatus.ACTIVE : SubscriptionStatus.PENDING,
+        status: stripeSubscriptionId ? 'ACTIVE' : 'PENDING',
         updatedAt: new Date(),
       },
       create: {
         stripeCustomerId,
-        stripeSubscriptionId,
+        stripeSubscriptionId: stripeSubscriptionId ?? null,
         plan,
-        status: stripeSubscriptionId ? SubscriptionStatus.ACTIVE : SubscriptionStatus.PENDING,
+        status: stripeSubscriptionId ? 'ACTIVE' : 'PENDING',
       },
     });
   }
