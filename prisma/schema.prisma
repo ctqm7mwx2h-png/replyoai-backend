@@ -1,0 +1,45 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Subscription {
+  id                    String   @id @default(uuid())
+  stripeCustomerId      String   @unique @map("stripe_customer_id")
+  stripeSubscriptionId  String?  @unique @map("stripe_subscription_id")
+  status                SubscriptionStatus @default(PENDING)
+  plan                  String   // "basic" | "premium"
+  createdAt             DateTime @default(now()) @map("created_at")
+  updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  instagramPages        InstagramPage[]
+
+  @@map("subscriptions")
+}
+
+model InstagramPage {
+  id              String   @id @default(uuid())
+  pageId          String   @unique @map("page_id")
+  subscriptionId  String   @map("subscription_id")
+  connectedAt     DateTime @default(now()) @map("connected_at")
+
+  // Relations
+  subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("instagram_pages")
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  CANCELLED
+  PAST_DUE
+}
