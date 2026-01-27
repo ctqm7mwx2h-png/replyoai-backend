@@ -23,19 +23,18 @@ model Subscription {
 }
 
 model BusinessProfile {
-  id            String   @id @default(uuid())
-  igUsername    String   @unique @map("ig_username")
-  businessName  String   @map("business_name")
-  bookingLink   String?  @map("booking_link")
-  email         String?
-  phone         String?
-  location      String?
-  hours         String?
-  tone          String?
-  industry      String?
-  subscriptionId String? @map("subscription_id")
-  createdAt     DateTime @default(now()) @map("created_at")
-  updatedAt     DateTime @updatedAt @map("updated_at")
+  id           String   @id @default(uuid())
+  igUsername   String   @unique @map("ig_username")
+  businessName String   @map("business_name")
+  bookingLink  String?  @map("booking_link")
+  email        String?
+  phone        String?
+  location     String?
+  hours        String?
+  tone         String?
+  industry     String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
 
   @@map("business_profiles")
 }
