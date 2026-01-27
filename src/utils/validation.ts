@@ -17,17 +17,55 @@ export const checkAccessSchema = z.object({
   ig_username: z.string().min(1, 'Instagram username is required'),
 });
 
-export const businessProfileSchema = z.object({
-  ig_username: z.string().min(1, 'Instagram username is required'),
-  business_name: z.string().min(1, 'Business name is required'),
-  booking_link: z.string().url('Invalid booking link URL').optional().or(z.literal('')),
-  email: z.string().email('Invalid email address').optional().or(z.literal('')),
-  phone: z.string().optional(),
-  location: z.string().optional(),
-  hours: z.string().optional(),
-  tone: z.string().optional(),
-  industry: z.string().optional(),
-});
+export const businessProfileSchema = z.union([
+  // Flat JSON format
+  z.object({
+    ig_username: z.string().min(1, 'Instagram username is required').optional(),
+    instagram_username: z.string().optional(),
+    instagram: z.string().optional(),
+    ig: z.string().optional(),
+    business_name: z.string().optional(),
+    company_name: z.string().optional(),
+    name: z.string().optional(),
+    booking_link: z.string().url('Invalid booking link URL').optional().or(z.literal('')),
+    email: z.string().email('Invalid email address').optional().or(z.literal('')),
+    phone: z.string().optional(),
+    location: z.string().optional(),
+    hours: z.string().optional(),
+    tone: z.string().optional(),
+    industry: z.string().optional(),
+  }),
+  // Fillout/webhook format with responses array
+  z.object({
+    responses: z.array(z.object({
+      question: z.string().optional(),
+      label: z.string().optional(), 
+      name: z.string().optional(),
+      fieldId: z.string().optional(),
+      answer: z.any().optional(),
+      value: z.any().optional(),
+      response: z.any().optional(),
+      data: z.any().optional(),
+    })).min(1, 'At least one response is required')
+  }),
+  // Mixed format (responses + flat fields)
+  z.object({
+    responses: z.array(z.object({
+      question: z.string().optional(),
+      label: z.string().optional(),
+      name: z.string().optional(),
+      fieldId: z.string().optional(),
+      answer: z.any().optional(),
+      value: z.any().optional(),
+      response: z.any().optional(),
+      data: z.any().optional(),
+    })).optional(),
+    ig_username: z.string().optional(),
+    business_name: z.string().optional(),
+  }).refine(data => data.responses || data.ig_username, {
+    message: "Either responses array or ig_username must be provided"
+  })
+]);
 
 export const getBusinessDataSchema = z.object({
   ig_username: z.string().min(1, 'Instagram username is required'),
