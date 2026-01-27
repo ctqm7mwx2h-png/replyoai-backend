@@ -104,10 +104,10 @@ export class StripeController {
   private static async handleSubscriptionDeleted(subscription: any) {
     await SubscriptionService.updateSubscriptionStatus(
       subscription.id,
-      'INACTIVE'
+      'CANCELLED'
     );
 
-    console.log(`Subscription ${subscription.id} set to INACTIVE`);
+    console.log(`Subscription ${subscription.id} cancelled`);
   }
 
   /**
@@ -131,10 +131,10 @@ export class StripeController {
     if (invoice.subscription) {
       await SubscriptionService.updateSubscriptionStatus(
         invoice.subscription,
-        'INACTIVE'
+        'PAST_DUE'
       );
 
-      console.log(`Payment failed for subscription ${invoice.subscription}, set to INACTIVE`);
+      console.log(`Payment failed for subscription ${invoice.subscription}, set to PAST_DUE`);
     }
   }
 
@@ -147,8 +147,9 @@ export class StripeController {
         return 'ACTIVE';
       case 'canceled':
       case 'cancelled':
+        return 'CANCELLED';
       case 'past_due':
-        return 'INACTIVE';
+        return 'PAST_DUE';
       case 'incomplete':
       case 'incomplete_expired':
       case 'trialing':

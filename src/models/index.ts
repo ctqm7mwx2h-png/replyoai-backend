@@ -16,4 +16,4 @@ process.on('SIGTERM', async () => {
 });
 
 // Export types for convenience
-export type { BusinessProfile } from '@prisma/client';
+export type { BusinessProfile, Subscription, SubscriptionStatus } from '@prisma/client';

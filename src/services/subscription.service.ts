@@ -46,48 +46,6 @@ export class SubscriptionService {
   }
 
   /**
-   * Register Instagram username to most recent active subscription without ig_username
-   */
-  static async registerIgUsername(igUsername: string) {
-    // Find the most recent ACTIVE subscription without ig_username
-    const subscription = await prisma.subscription.findFirst({
-      where: {
-        status: 'ACTIVE',
-        igUsername: null,
-      },
-      orderBy: {
-        createdAt: 'desc',
-      },
-    });
-
-    if (!subscription) {
-      throw new Error('No available subscription found');
-    }
-
-    // Assign ig_username to the subscription
-    return await prisma.subscription.update({
-      where: { id: subscription.id },
-      data: {
-        igUsername: igUsername,
-        updatedAt: new Date(),
-      },
-    });
-  }
-
-  /**
-   * Check access for Instagram username
-   */
-  static async checkAccessByUsername(igUsername: string) {
-    const subscription = await prisma.subscription.findUnique({
-      where: { igUsername },
-    });
-
-    return {
-      allowed: subscription?.status === 'ACTIVE',
-    };
-  }
-
-  /**
    * Find subscription by Stripe customer ID
    */
   static async findByCustomerId(stripeCustomerId: string) {

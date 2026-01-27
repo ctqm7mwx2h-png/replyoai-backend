@@ -1,5 +1,5 @@
 import { Request, Response } from 'express';
-import { SubscriptionService } from '../services/subscription.service.js';
+import { LicenseService } from '../services/license.service.js';
 import type { ApiResponse } from '../utils/validation.js';
 
 export class LicenseController {
@@ -11,7 +11,7 @@ export class LicenseController {
     try {
       const { ig_username } = req.body;
 
-      await SubscriptionService.registerIgUsername(ig_username);
+      await LicenseService.registerIgUsername(ig_username);
 
       const response: ApiResponse = {
         success: true,
@@ -49,7 +49,7 @@ export class LicenseController {
     try {
       const { ig_username } = req.body;
 
-      const accessResult = await SubscriptionService.checkAccessByUsername(ig_username);
+      const accessResult = await LicenseService.checkAccessByUsername(ig_username);
 
       const response: ApiResponse = {
         success: true,

@@ -14,7 +14,6 @@ model Subscription {
   id                    String   @id @default(uuid())
   stripeCustomerId      String   @unique @map("stripe_customer_id")
   stripeSubscriptionId  String?  @unique @map("stripe_subscription_id")
-  igUsername            String?  @unique @map("ig_username")
   status                SubscriptionStatus @default(PENDING)
   plan                  String   // "basic" | "premium"
   createdAt             DateTime @default(now()) @map("created_at")
@@ -34,6 +33,7 @@ model BusinessProfile {
   hours         String?
   tone          String?
   industry      String?
+  subscriptionId String? @map("subscription_id")
   createdAt     DateTime @default(now()) @map("created_at")
 
   @@map("business_profiles")
@@ -42,6 +42,6 @@ model BusinessProfile {
 enum SubscriptionStatus {
   PENDING
   ACTIVE
-  INACTIVE
+  CANCELLED
   PAST_DUE
 }
