@@ -81,10 +81,14 @@ export class BusinessProfileController {
       // Extract ig_username with multiple fallbacks
       const igUsername = extractFromFlat(['ig_username', 'instagram_username', 'instagram', 'ig']) ||
                         extractFromResponses(['instagram username', 'ig username', 'instagram', 'ig', 'instagram_username']);
+      
+      console.log('Debug - Extracted igUsername:', igUsername);
 
       // Extract business_name
       const businessName = extractFromFlat(['business_name', 'company_name', 'name']) ||
                           extractFromResponses(['business name', 'company name', 'name']);
+      
+      console.log('Debug - Extracted businessName:', businessName);
 
       // Extract booking_link
       let bookingLink = extractFromFlat(['booking_link', 'booking_url', 'booking', 'calendly']) ||
