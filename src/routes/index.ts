@@ -8,7 +8,6 @@ import {
   onboardSchema, 
   registerIgSchema, 
   checkAccessSchema,
-  businessProfileSchema,
   getBusinessDataSchema
 } from '../utils/validation.js';
 
@@ -25,7 +24,7 @@ router.post('/register-ig', validateRequest(registerIgSchema), LicenseController
 router.post('/check-access', validateRequest(checkAccessSchema), LicenseController.checkAccess);
 
 // Business profile endpoints
-router.post('/business-profile', validateRequest(businessProfileSchema), BusinessProfileController.upsertBusinessProfile);
+router.post('/business-profile', BusinessProfileController.upsertBusinessProfile);
 router.post('/get-business-data', validateRequest(getBusinessDataSchema), BusinessProfileController.getBusinessData);
 
 // Health check endpoint
