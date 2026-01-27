@@ -2,7 +2,6 @@ import { Request, Response } from 'express';
 import { stripe } from '../utils/stripe.js';
 import { config } from '../config/index.js';
 import { SubscriptionService } from '../services/subscription.service.js';
-import type { SubscriptionStatus } from '@prisma/client';
 
 export class StripeController {
   /**
@@ -141,7 +140,7 @@ export class StripeController {
   /**
    * Map Stripe status to our internal status
    */
-  private static mapStripeStatus(stripeStatus: string): SubscriptionStatus {
+  private static mapStripeStatus(stripeStatus: string): 'PENDING' | 'ACTIVE' | 'CANCELLED' | 'PAST_DUE' {
     switch (stripeStatus) {
       case 'active':
         return 'ACTIVE';

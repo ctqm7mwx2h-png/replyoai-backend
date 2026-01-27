@@ -14,6 +14,3 @@ process.on('SIGTERM', async () => {
   await prisma.$disconnect();
   process.exit(0);
 });
-
-// Export types for convenience
-export type { BusinessProfile, Subscription, SubscriptionStatus } from '@prisma/client';

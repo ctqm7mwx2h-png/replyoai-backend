@@ -1,5 +1,4 @@
 import { prisma } from '../models/index.js';
-import type { SubscriptionStatus } from '@prisma/client';
 
 export class SubscriptionService {
   /**
@@ -34,7 +33,7 @@ export class SubscriptionService {
    */
   static async updateSubscriptionStatus(
     stripeSubscriptionId: string,
-    status: SubscriptionStatus
+    status: 'PENDING' | 'ACTIVE' | 'CANCELLED' | 'PAST_DUE'
   ) {
     return await prisma.subscription.update({
       where: { stripeSubscriptionId },
