@@ -10,8 +10,6 @@ export class BusinessProfileController {
   static async upsertBusinessProfile(req: Request, res: Response): Promise<void> {
     try {
       const body = req.body;
-      console.log('Debug - Request body:', JSON.stringify(body, null, 2));
-      console.log('Debug - Body keys:', Object.keys(body));
 
       // Helper function to normalize and trim values
       const normalizeValue = (value: any): string | undefined => {
@@ -81,14 +79,10 @@ export class BusinessProfileController {
       // Extract ig_username with multiple fallbacks
       const igUsername = extractFromFlat(['ig_username', 'instagram_username', 'instagram', 'ig']) ||
                         extractFromResponses(['instagram username', 'ig username', 'instagram', 'ig', 'instagram_username']);
-      
-      console.log('Debug - Extracted igUsername:', igUsername);
 
       // Extract business_name
       const businessName = extractFromFlat(['business_name', 'company_name', 'name']) ||
                           extractFromResponses(['business name', 'company name', 'name']);
-      
-      console.log('Debug - Extracted businessName:', businessName);
 
       // Extract booking_link
       let bookingLink = extractFromFlat(['booking_link', 'booking_url', 'booking', 'calendly']) ||
@@ -130,10 +124,10 @@ export class BusinessProfileController {
 
         const response = {
           success: false,
-          message: 'DEBUG: Instagram username missing from controller',
+          message: 'Validation error',
           errors: [{
             path: 'ig_username',
-            message: 'Instagram username is required from controller'
+            message: 'Instagram username is required'
           }]
         };
         res.status(400).json(response);
