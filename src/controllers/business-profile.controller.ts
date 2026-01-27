@@ -130,10 +130,10 @@ export class BusinessProfileController {
 
         const response = {
           success: false,
-          message: 'Validation error',
+          message: 'DEBUG: Instagram username missing from controller',
           errors: [{
             path: 'ig_username',
-            message: 'Instagram username is required'
+            message: 'Instagram username is required from controller'
           }]
         };
         res.status(400).json(response);
