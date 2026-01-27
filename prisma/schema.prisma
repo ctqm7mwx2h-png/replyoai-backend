@@ -14,32 +14,34 @@ model Subscription {
   id                    String   @id @default(uuid())
   stripeCustomerId      String   @unique @map("stripe_customer_id")
   stripeSubscriptionId  String?  @unique @map("stripe_subscription_id")
+  igUsername            String?  @unique @map("ig_username")
   status                SubscriptionStatus @default(PENDING)
   plan                  String   // "basic" | "premium"
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
 
-  // Relations
-  instagramPages        InstagramPage[]
-
   @@map("subscriptions")
 }
 
-model InstagramPage {
-  id              String   @id @default(uuid())
-  pageId          String   @unique @map("page_id")
-  subscriptionId  String   @map("subscription_id")
-  connectedAt     DateTime @default(now()) @map("connected_at")
+model BusinessProfile {
+  id            String   @id @default(uuid())
+  igUsername    String   @unique @map("ig_username")
+  businessName  String   @map("business_name")
+  bookingLink   String?  @map("booking_link")
+  email         String?
+  phone         String?
+  location      String?
+  hours         String?
+  tone          String?
+  industry      String?
+  createdAt     DateTime @default(now()) @map("created_at")
 
-  // Relations
-  subscription    Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
-
-  @@map("instagram_pages")
+  @@map("business_profiles")
 }
 
 enum SubscriptionStatus {
   PENDING
   ACTIVE
-  CANCELLED
+  INACTIVE
   PAST_DUE
 }

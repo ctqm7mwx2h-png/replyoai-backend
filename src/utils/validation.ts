@@ -9,13 +9,28 @@ export const onboardSchema = z.object({
   }),
 });
 
-export const connectInstagramSchema = z.object({
-  subscriptionId: z.string().uuid('Invalid subscription ID format'),
-  instagramPageId: z.string().min(1, 'Instagram page ID is required'),
+export const registerIgSchema = z.object({
+  ig_username: z.string().min(1, 'Instagram username is required'),
 });
 
 export const checkAccessSchema = z.object({
-  instagramPageId: z.string().min(1, 'Instagram page ID is required'),
+  ig_username: z.string().min(1, 'Instagram username is required'),
+});
+
+export const businessProfileSchema = z.object({
+  ig_username: z.string().min(1, 'Instagram username is required'),
+  business_name: z.string().min(1, 'Business name is required'),
+  booking_link: z.string().url('Invalid booking link URL').optional().or(z.literal('')),
+  email: z.string().email('Invalid email address').optional().or(z.literal('')),
+  phone: z.string().optional(),
+  location: z.string().optional(),
+  hours: z.string().optional(),
+  tone: z.string().optional(),
+  industry: z.string().optional(),
+});
+
+export const getBusinessDataSchema = z.object({
+  ig_username: z.string().min(1, 'Instagram username is required'),
 });
 
 // Response types
@@ -31,5 +46,4 @@ export interface ApiResponse<T = any> {
 
 export interface CheckAccessResponse {
   allowed: boolean;
-  subscriptionStatus: string | null;
 }

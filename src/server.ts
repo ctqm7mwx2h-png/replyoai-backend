@@ -35,8 +35,10 @@ app.get('/', (_req, res) => {
     endpoints: {
       health: `${config.api.basePath}/health`,
       onboard: `${config.api.basePath}/onboard`,
-      connectInstagram: `${config.api.basePath}/connect-instagram`,
+      registerIg: `${config.api.basePath}/register-ig`,
       checkAccess: `${config.api.basePath}/check-access`,
+      businessProfile: `${config.api.basePath}/business-profile`,
+      getBusinessData: `${config.api.basePath}/get-business-data`,
       stripeWebhook: `${config.api.basePath}/webhooks/stripe`,
     },
   });
