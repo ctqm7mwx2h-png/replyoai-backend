@@ -10,6 +10,8 @@ export class BusinessProfileController {
   static async upsertBusinessProfile(req: Request, res: Response): Promise<void> {
     try {
       const body = req.body;
+      console.log('Debug - Request body:', JSON.stringify(body, null, 2));
+      console.log('Debug - Body keys:', Object.keys(body));
 
       // Helper function to normalize and trim values
       const normalizeValue = (value: any): string | undefined => {
