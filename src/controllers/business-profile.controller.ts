@@ -26,9 +26,10 @@ export class BusinessProfileController {
     } catch (error) {
       console.error('Error saving business profile:', error);
       
-      const response: ApiResponse = {
+      const response = {
         success: false,
-        message: 'Error saving business profile',
+        error: error instanceof Error ? error.message : 'Unknown error',
+        details: error
       };
 
       res.status(500).json(response);
