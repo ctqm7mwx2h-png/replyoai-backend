@@ -27,6 +27,9 @@ router.post('/check-access', validateRequest(checkAccessSchema), LicenseControll
 router.post('/business-profile', BusinessProfileController.upsertBusinessProfile);
 router.post('/get-business-data', validateRequest(getBusinessDataSchema), BusinessProfileController.getBusinessData);
 
+// Fillout webhook endpoint (no validation - accepts any payload)
+router.post('/fillout-webhook', BusinessProfileController.handleFilloutWebhook);
+
 // Health check endpoint
 router.get('/health', (_req, res) => {
   res.status(200).json({
@@ -40,6 +43,7 @@ router.get('/health', (_req, res) => {
       'POST /api/check-access',
       'POST /api/business-profile',
       'POST /api/get-business-data',
+      'POST /api/fillout-webhook',
       'GET /api/health'
     ]
   });
