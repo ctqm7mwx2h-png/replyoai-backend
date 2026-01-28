@@ -10,118 +10,45 @@ export class BusinessProfileController {
   static async upsertBusinessProfile(req: Request, res: Response): Promise<void> {
     try {
       const body = req.body;
-
-      // Helper function to normalize and trim values
-      const normalizeValue = (value: any): string | undefined => {
-        if (!value) return undefined;
-        if (Array.isArray(value)) {
-          const firstNonEmpty = value.find(v => v && String(v).trim());
-          return firstNonEmpty ? String(firstNonEmpty).trim() : undefined;
-        }
-        const trimmed = String(value).trim();
-        return trimmed || undefined;
-      };
-
-      // Helper function to extract from flat JSON properties
-      const extractFromFlat = (keys: string[]): string | undefined => {
-        for (const key of keys) {
-          if (body[key]) {
-            const normalized = normalizeValue(body[key]);
-            if (normalized) return normalized;
-          }
-        }
-        return undefined;
-      };
-
-      // Helper function to extract from responses array (handles multiple variants)
-      const extractFromResponses = (searchTerms: string[]): string | undefined => {
-        if (!Array.isArray(body.responses)) return undefined;
-
-        for (const response of body.responses) {
-          if (!response || typeof response !== 'object') continue;
-
-          // Try different property combinations for questions/labels
-          const questionKeys = ['question', 'label', 'name', 'fieldId', 'field'];
-          const answerKeys = ['answer', 'value', 'response', 'data'];
-
-          let questionText = '';
-          let answerValue = undefined;
-
-          // Extract question text from various possible keys
-          for (const qKey of questionKeys) {
-            if (response[qKey]) {
-              questionText = String(response[qKey]).toLowerCase().trim();
-              break;
-            }
-          }
-
-          // Extract answer value from various possible keys
-          for (const aKey of answerKeys) {
-            if (response[aKey]) {
-              answerValue = response[aKey];
-              break;
-            }
-          }
-
-          if (!questionText || !answerValue) continue;
-
-          // Check if question matches any of our search terms
-          for (const term of searchTerms) {
-            if (questionText.includes(term.toLowerCase())) {
-              const normalized = normalizeValue(answerValue);
-              if (normalized) return normalized;
-            }
-          }
-        }
-        return undefined;
-      };
-
-      // Extract ig_username with multiple fallbacks
-      const igUsername = extractFromFlat(['ig_username', 'instagram_username', 'instagram', 'ig']) ||
-                        extractFromResponses(['instagram username', 'ig username', 'instagram', 'ig', 'instagram_username']);
-
-      // Extract business_name
-      const businessName = extractFromFlat(['business_name', 'company_name', 'name']) ||
-                          extractFromResponses(['business name', 'company name', 'name']);
-
-      // Extract booking_link
-      let bookingLink = extractFromFlat(['booking_link', 'booking_url', 'booking', 'calendly']) ||
-                       extractFromResponses(['booking link', 'booking url', 'booking', 'calendly']);
       
-      // If booking_link contains multiple URLs, extract first valid one
-      if (bookingLink && bookingLink.includes(' ')) {
-        const urls = bookingLink.split(/\s+/).filter(url => url.includes('http') || url.includes('.com'));
-        bookingLink = urls[0] || bookingLink;
-      }
+      // Log payload for debugging
+      console.log('Business profile payload:', JSON.stringify(body, null, 2));
 
-      // Extract industry
-      const industry = extractFromFlat(['industry', 'sector', 'category']) ||
-                      extractFromResponses(['industry', 'sector', 'category']);
+      // Helper function to get answer by key from Fillout submission
+      const getAnswer = (key: string): string | undefined => {
+        // Check if we have Fillout submission structure
+        if (body.submission && Array.isArray(body.submission.questions)) {
+          const question = body.submission.questions.find((q: any) => q.key === key);
+          if (question && question.value) {
+            const value = String(question.value).trim();
+            return value || undefined;
+          }
+        }
+        
+        // Fallback to flat JSON structure for backwards compatibility
+        if (body[key]) {
+          const value = String(body[key]).trim();
+          return value || undefined;
+        }
+        
+        return undefined;
+      };
 
-      // Extract optional fields
-      const email = extractFromFlat(['email', 'email_address']) ||
-                   extractFromResponses(['email', 'email address', 'e-mail']);
+      // Extract required and optional fields
+      const igUsername = getAnswer('ig_username');
+      const businessName = getAnswer('business_name');
+      const bookingLink = getAnswer('booking_link');
+      const email = getAnswer('email');
+      const phone = getAnswer('phone');
+      const location = getAnswer('location');
+      const hours = getAnswer('hours');
+      const tone = getAnswer('tone');
+      const industry = getAnswer('industry');
 
-      const phone = extractFromFlat(['phone', 'phone_number', 'telephone']) ||
-                   extractFromResponses(['phone', 'phone number', 'telephone']);
-
-      const location = extractFromFlat(['location', 'address', 'city']) ||
-                      extractFromResponses(['location', 'address', 'city']);
-
-      const hours = extractFromFlat(['hours', 'business_hours', 'operating_hours']) ||
-                   extractFromResponses(['hours', 'business hours', 'operating hours']);
-
-      const tone = extractFromFlat(['tone', 'voice', 'style']) ||
-                  extractFromResponses(['tone', 'voice', 'style']);
-
-      // Validation
+      // Validation - ig_username is required
       if (!igUsername) {
-        console.error('Validation error: Instagram username missing', {
-          bodyKeys: Object.keys(body),
-          hasResponses: Array.isArray(body.responses),
-          responsesCount: Array.isArray(body.responses) ? body.responses.length : 0
-        });
-
+        console.error('Validation error: Instagram username missing from submission');
+        
         const response = {
           success: false,
           message: 'Validation error',
@@ -134,10 +61,10 @@ export class BusinessProfileController {
         return;
       }
 
-      // Prepare profile data (map to service interface)
+      // Prepare profile data for database
       const profileData = {
         ig_username: igUsername,
-        business_name: businessName || igUsername, // Use ig_username as default if business_name is missing
+        business_name: businessName || igUsername, // Use ig_username as fallback
         booking_link: bookingLink || undefined,
         industry: industry || undefined,
         email: email || undefined,
@@ -147,6 +74,9 @@ export class BusinessProfileController {
         tone: tone || undefined,
       };
 
+      console.log('Extracted profile data:', profileData);
+
+      // Save to database
       const businessProfile = await BusinessProfileService.upsertBusinessProfile(profileData);
 
       const response: ApiResponse = {
