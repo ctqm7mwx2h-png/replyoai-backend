@@ -3,6 +3,7 @@ import { StripeController } from '../controllers/stripe.controller.js';
 import { OnboardController } from '../controllers/onboard.controller.js';
 import { LicenseController } from '../controllers/license.controller.js';
 import { BusinessProfileController } from '../controllers/business-profile.controller.js';
+import { ConversationController } from '../controllers/conversation.controller.js';
 import { validateRequest } from '../middleware/validation.js';
 import { 
   onboardSchema, 
@@ -30,6 +31,11 @@ router.post('/get-business-data', validateRequest(getBusinessDataSchema), Busine
 // Fillout webhook endpoint (no validation - accepts any payload)
 router.post('/fillout-webhook', BusinessProfileController.handleFilloutWebhook);
 
+// Conversation engine endpoints
+router.post('/conversation/message', ConversationController.processMessage);
+router.post('/conversation/reset', ConversationController.resetConversation);
+router.get('/conversation/stats', ConversationController.getStats);
+
 // Health check endpoint
 router.get('/health', (_req, res) => {
   res.status(200).json({
@@ -44,6 +50,9 @@ router.get('/health', (_req, res) => {
       'POST /api/business-profile',
       'POST /api/get-business-data',
       'POST /api/fillout-webhook',
+      'POST /api/conversation/message',
+      'POST /api/conversation/reset',
+      'GET /api/conversation/stats',
       'GET /api/health'
     ]
   });
