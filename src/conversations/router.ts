@@ -1,117 +1,155 @@
-import { ConversationEngine, ConversationResult } from './engine.js';
-import { beautyFlow } from './states/beauty.js';
+import { ConversationEngine } from './engine.js';
+import { 
+  ConversationResult,
+  ConversationSession,
+  ConversationFlow
+} from './types.js';
+import { beautyFlow } from './templates/beauty.js';
+import { hairFlow } from './templates/hair.js';
+import { fitnessFlow } from './templates/fitness.js';
+import { cleaningFlow } from './templates/cleaning.js';
+import { plumbingFlow } from './templates/plumbing.js';
+import { electricalFlow } from './templates/electrical.js';
+import { detailingFlow } from './templates/detailing.js';
 import { ConversationService } from '../services/conversation.service.js';
-
-interface ConversationSession {
-  currentState: string;
-  lastActivity: number;
-  industry?: string;
-}
-
-interface ConversationResponse {
-  text: string;
-  quickReplies?: string[];
-}
+import { ConversationPersistenceService } from '../services/conversation-persistence.service.js';
+import { StatsService } from '../services/stats.service.js';
 
 export class ConversationRouter {
   private static sessions = new Map<string, ConversationSession>();
-  private static readonly SESSION_TIMEOUT = 30 * 60 * 1000; // 30 minutes
 
   /**
-   * Main entry point for processing conversation messages
+   * Process incoming message and generate response
    */
   static async processMessage(
     igUsername: string,
-    messageText: string
-  ): Promise<ConversationResponse> {
+    userId: string,
+    message: string
+  ): Promise<ConversationResult> {
     try {
-      // Clean up expired sessions periodically
-      this.cleanExpiredSessions();
-
-      // Get or create session
-      let session = this.getSession(igUsername);
-      if (!session) {
-        session = this.createSession(igUsername);
-      }
-
       // Get business data
       const businessData = await ConversationService.getBusinessData(igUsername);
       if (!businessData) {
-        return {
-          text: "Sorry, I couldn't find your business profile. Please make sure your account is set up correctly.",
-          quickReplies: []
-        };
+        throw new Error('Business not found');
       }
 
-      // Determine conversation flow based on industry or default to beauty
-      const flow = this.getConversationFlow(businessData.industry || 'beauty');
+      // Get or create conversation session
+      let session = await ConversationPersistenceService.getOrCreateConversation(
+        businessData.id, 
+        userId
+      );
       
-      // Process the message through conversation engine
-      const result: ConversationResult = ConversationEngine.processMessage(
+      // Set industry from business data
+      session.industry = businessData.industry || 'beauty';
+
+      // Get appropriate conversation flow
+      const flow = this.getConversationFlow(session.industry);
+
+      // Process message using conversation engine
+      const result = ConversationEngine.processMessage(
         flow,
-        session.currentState,
-        messageText,
+        session,
+        message,
         businessData
       );
 
-      // Update session
+      // Save the user message
+      await ConversationPersistenceService.saveMessage(
+        session.conversationId,
+        message,
+        false // from user
+      );
+
+      // Save the bot response
+      await ConversationPersistenceService.saveMessage(
+        session.conversationId,
+        result.message,
+        true, // from business
+        result.state
+      );
+
+      // Update conversation state and lead qualification
+      await ConversationPersistenceService.updateConversation(
+        session.conversationId,
+        result,
+        result.qualificationData
+      );
+
+      // Update stats
+      if (result.state === 'START') {
+        await StatsService.recordConversationEvent(businessData.id, 'start');
+      }
+      if (result.shouldQualify) {
+        await StatsService.recordConversationEvent(businessData.id, 'qualify');
+      }
+      if (result.isBookingAttempt) {
+        await StatsService.recordConversationEvent(businessData.id, 'book');
+      }
+
+      // Update session in memory
       session.currentState = result.state;
       session.lastActivity = Date.now();
-      this.sessions.set(igUsername, session);
+      if (result.qualificationData) {
+        session.leadData = { ...session.leadData, ...result.qualificationData };
+      }
+      this.sessions.set(`${businessData.id}:${userId}`, session);
 
-      return {
-        text: result.message,
-        quickReplies: result.quickReplies
-      };
+      return result;
 
     } catch (error) {
-      console.error('Conversation router error:', error);
-      
-      // Fallback response
+      console.error('Conversation processing error:', error);
       return {
-        text: "I'm having trouble right now, but I'll be back shortly! Please try again in a moment. 🙏",
-        quickReplies: ["🔄 Try Again"]
+        state: 'ERROR',
+        message: 'Sorry, I\'m having trouble right now. Please try again or contact us directly.',
+        quickReplies: []
       };
     }
   }
 
   /**
-   * Get existing session for user
+   * Reset conversation for a user
    */
-  private static getSession(igUsername: string): ConversationSession | null {
-    const session = this.sessions.get(igUsername);
-    
-    if (!session) {
-      return null;
+  static async resetConversation(igUsername: string, userId: string): Promise<void> {
+    const businessData = await ConversationService.getBusinessData(igUsername);
+    if (businessData) {
+      const sessionKey = `${businessData.id}:${userId}`;
+      this.sessions.delete(sessionKey);
     }
-
-    // Check if session has expired
-    if (Date.now() - session.lastActivity > this.SESSION_TIMEOUT) {
-      this.sessions.delete(igUsername);
-      return null;
-    }
-
-    return session;
-  }
-
-  /**
-   * Create new session for user
-   */
-  private static createSession(igUsername: string): ConversationSession {
-    const session: ConversationSession = {
-      currentState: ConversationEngine.getInitialState(),
-      lastActivity: Date.now()
-    };
-
-    this.sessions.set(igUsername, session);
-    return session;
   }
 
   /**
    * Get conversation flow based on industry
    */
-  private static getConversationFlow(industry: string) {
+  private static getConversationFlow(industry: string): ConversationFlow {
     switch (industry?.toLowerCase()) {
+      case 'hair':
+      case 'barber':
+      case 'barbershop':
+      case 'hairdresser':
+        return hairFlow;
+      case 'fitness':
+      case 'gym':
+      case 'personal training':
+      case 'trainer':
+        return fitnessFlow;
+      case 'cleaning':
+      case 'house cleaning':
+      case 'office cleaning':
+      case 'maid service':
+        return cleaningFlow;
+      case 'plumbing':
+      case 'plumber':
+      case 'pipes':
+        return plumbingFlow;
+      case 'electrical':
+      case 'electrician':
+      case 'electric':
+        return electricalFlow;
+      case 'detailing':
+      case 'car detailing':
+      case 'auto detailing':
+      case 'car wash':
+        return detailingFlow;
       case 'beauty':
       case 'salon':
       case 'spa':
@@ -122,54 +160,23 @@ export class ConversationRouter {
   }
 
   /**
-   * Clean up expired sessions to prevent memory leaks
+   * Get session information for debugging
    */
-  private static cleanExpiredSessions(): void {
-    const now = Date.now();
-    const expiredKeys: string[] = [];
+  static getSession(businessId: string, userId: string): ConversationSession | undefined {
+    return this.sessions.get(`${businessId}:${userId}`);
+  }
 
-    for (const [key, session] of this.sessions.entries()) {
-      if (now - session.lastActivity > this.SESSION_TIMEOUT) {
-        expiredKeys.push(key);
+  /**
+   * Clean up old sessions (call periodically)
+   */
+  static cleanupSessions(): void {
+    const now = Date.now();
+    const maxAge = 24 * 60 * 60 * 1000; // 24 hours
+
+    for (const [key, session] of this.sessions) {
+      if (now - session.lastActivity > maxAge) {
+        this.sessions.delete(key);
       }
     }
-
-    for (const key of expiredKeys) {
-      this.sessions.delete(key);
-    }
-  }
-
-  /**
-   * Reset conversation for a user (start over)
-   */
-  static resetConversation(igUsername: string): void {
-    this.sessions.delete(igUsername);
-  }
-
-  /**
-   * Get current session state for a user
-   */
-  static getSessionState(igUsername: string): string | null {
-    const session = this.getSession(igUsername);
-    return session ? session.currentState : null;
-  }
-
-  /**
-   * Get session statistics (for monitoring)
-   */
-  static getSessionStats(): { activeUsers: number; totalSessions: number } {
-    this.cleanExpiredSessions();
-    
-    return {
-      activeUsers: this.sessions.size,
-      totalSessions: this.sessions.size
-    };
-  }
-
-  /**
-   * Force cleanup all sessions (for development/testing)
-   */
-  static clearAllSessions(): void {
-    this.sessions.clear();
   }
 }

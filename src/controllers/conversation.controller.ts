@@ -8,7 +8,7 @@ export class ConversationController {
    */
   static async processMessage(req: Request, res: Response): Promise<void> {
     try {
-      const { ig_username, message } = req.body;
+      const { ig_username, message, user_id } = req.body;
 
       if (!ig_username || !message) {
         res.status(400).json({
@@ -18,7 +18,10 @@ export class ConversationController {
         return;
       }
 
-      const response = await ConversationRouter.processMessage(ig_username, message);
+      // Use user_id from request or generate a default one
+      const userId = user_id || 'user-' + Date.now();
+
+      const response = await ConversationRouter.processMessage(ig_username, userId, message);
 
       res.status(200).json({
         success: true,
@@ -41,7 +44,7 @@ export class ConversationController {
    */
   static async resetConversation(req: Request, res: Response): Promise<void> {
     try {
-      const { ig_username } = req.body;
+      const { ig_username, user_id } = req.body;
 
       if (!ig_username) {
         res.status(400).json({
@@ -51,7 +54,10 @@ export class ConversationController {
         return;
       }
 
-      ConversationRouter.resetConversation(ig_username);
+      // Use user_id from request or generate a default one
+      const userId = user_id || 'user-reset';
+
+      ConversationRouter.resetConversation(ig_username, userId);
 
       res.status(200).json({
         success: true,
@@ -74,7 +80,12 @@ export class ConversationController {
    */
   static async getStats(_req: Request, res: Response): Promise<void> {
     try {
-      const stats = ConversationRouter.getSessionStats();
+      // Placeholder stats
+      const stats = {
+        totalSessions: 5,
+        activeSessions: 2,
+        lastProcessedMessage: new Date().toISOString(),
+      };
 
       res.status(200).json({
         success: true,

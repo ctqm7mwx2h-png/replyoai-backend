@@ -1,6 +1,7 @@
 import { prisma } from '../models/index.js';
 
 export interface BusinessData {
+  id: string;
   business_name: string;
   booking_link?: string;
   email?: string;
@@ -26,6 +27,7 @@ export class ConversationService {
       }
 
       return {
+        id: businessProfile.id,
         business_name: businessProfile.businessName,
         booking_link: businessProfile.bookingLink || undefined,
         email: businessProfile.email || undefined,

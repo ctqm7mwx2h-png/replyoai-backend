@@ -23,20 +23,91 @@ model Subscription {
 }
 
 model BusinessProfile {
-  id           String   @id @default(uuid())
-  igUsername   String   @unique @map("ig_username")
-  businessName String   @map("business_name")
-  bookingLink  String?  @map("booking_link")
-  email        String?
-  phone        String?
-  location     String?
-  hours        String?
-  tone         String?
-  industry     String?
-  createdAt    DateTime @default(now()) @map("created_at")
-  updatedAt    DateTime @updatedAt @map("updated_at")
+  id                  String   @id @default(uuid())
+  igUsername          String   @unique @map("ig_username")
+  businessName        String   @map("business_name")
+  bookingLink         String?  @map("booking_link")
+  email               String?
+  phone               String?
+  location            String?
+  hours               String?
+  tone                String?
+  industry            String?
+  avgOrderValue       Float?   @map("avg_order_value") // Per-business AOV override
+  conversionMultiplier Float?  @map("conversion_multiplier") // Business-specific conversion rate
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  conversations       Conversation[]
+  stats              BusinessStats[]
+  installations      Installation[]
+  aggregatedStats    AggregatedStats[]
 
   @@map("business_profiles")
+}
+
+model Conversation {
+  id                  String   @id @default(uuid())
+  businessId          String   @map("business_id")
+  userId              String   @map("user_id") // Instagram user who sent DM
+  currentState        String   @default("START") @map("current_state")
+  isQualified         Boolean  @default(false) @map("is_qualified")
+  hasBooked          Boolean  @default(false) @map("has_booked")
+  leadService        String?  @map("lead_service")
+  leadUrgency        String?  @map("lead_urgency") // "today", "this_week", "this_month", "planning"
+  leadIntent         String?  @map("lead_intent") // "first_time", "returning", "comparison"
+  lastMessageAt      DateTime @default(now()) @map("last_message_at")
+  followUpCount      Int      @default(0) @map("follow_up_count")
+  nextFollowUpAt     DateTime? @map("next_follow_up_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  business           BusinessProfile @relation(fields: [businessId], references: [id])
+  messages           ConversationMessage[]
+
+  @@map("conversations")
+  @@index([businessId])
+  @@index([userId])
+  @@index([nextFollowUpAt])
+}
+
+model ConversationMessage {
+  id                  String   @id @default(uuid())
+  conversationId      String   @map("conversation_id")
+  fromBusiness        Boolean  @default(false) @map("from_business")
+  message             String
+  state              String?
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  // Relations
+  conversation       Conversation @relation(fields: [conversationId], references: [id])
+
+  @@map("conversation_messages")
+  @@index([conversationId])
+}
+
+model BusinessStats {
+  id                  String   @id @default(uuid())
+  businessId          String   @map("business_id")
+  date               DateTime @db.Date
+  totalConversations  Int      @default(0) @map("total_conversations")
+  qualifiedLeads     Int      @default(0) @map("qualified_leads")
+  bookingClicks      Int      @default(0) @map("booking_clicks")
+  mostRequestedService String? @map("most_requested_service")
+  responseRate       Float    @default(0) @map("response_rate") // 0-1
+  conversionRate     Float    @default(0) @map("conversion_rate") // 0-1
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  business           BusinessProfile @relation(fields: [businessId], references: [id])
+
+  @@map("business_stats")
+  @@unique([businessId, date])
+  @@index([businessId])
+  @@index([date])
 }
 
 enum SubscriptionStatus {
@@ -44,4 +115,86 @@ enum SubscriptionStatus {
   ACTIVE
   CANCELLED
   PAST_DUE
+}
+
+model Installation {
+  id                  String   @id @default(uuid())
+  businessId          String   @map("business_id")
+  status             InstallationStatus @default(PENDING)
+  templateId         String?  @map("template_id") // Which industry template
+  templateSnapshot   Json?    @map("template_snapshot") // Snapshot of template config at install
+  fbPageId           String?  @map("fb_page_id")
+  fbAccessToken      String?  @map("fb_access_token") // Encrypted
+  webhookVerified    Boolean  @default(false) @map("webhook_verified")
+  onboardingEmailsSent Int    @default(0) @map("onboarding_emails_sent")
+  lastInstallAttempt DateTime? @map("last_install_attempt")
+  manualRequired     Boolean  @default(false) @map("manual_required")
+  disabled           Boolean  @default(false)
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  business           BusinessProfile @relation(fields: [businessId], references: [id])
+
+  @@map("installations")
+  @@index([businessId])
+  @@index([status])
+}
+
+model AggregatedStats {
+  id                  String   @id @default(uuid())
+  businessId          String   @map("business_id")
+  periodStart         DateTime @map("period_start") @db.Date
+  periodEnd           DateTime @map("period_end") @db.Date
+  conversations       Int      @default(0)
+  qualifiedLeads     Int      @default(0) @map("qualified_leads")
+  bookingClicks      Int      @default(0) @map("booking_clicks")
+  estimatedRevenue   Float    @default(0) @map("estimated_revenue")
+  avgResponseTime    Float?   @map("avg_response_time") // Minutes
+  topService         String?  @map("top_service")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  business           BusinessProfile @relation(fields: [businessId], references: [id])
+
+  @@map("aggregated_stats")
+  @@unique([businessId, periodStart, periodEnd])
+  @@index([businessId])
+  @@index([periodStart])
+}
+
+model JobQueue {
+  id                  String   @id @default(uuid())
+  jobId              String   @unique @map("job_id") // BullMQ job ID
+  jobType            String   @map("job_type") // "followup", "stats_aggregation", "onboarding_email"
+  data               Json
+  status             JobStatus @default(PENDING)
+  attempts           Int      @default(0)
+  maxAttempts        Int      @default(3) @map("max_attempts")
+  lastError          String?  @map("last_error")
+  scheduledAt        DateTime? @map("scheduled_at")
+  processedAt        DateTime? @map("processed_at")
+  createdAt          DateTime @default(now()) @map("created_at")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("job_queue")
+  @@index([jobType])
+  @@index([status])
+  @@index([scheduledAt])
+}
+
+enum InstallationStatus {
+  PENDING
+  INSTALLED
+  FAILED
+  MANUAL_REQUIRED
+}
+
+enum JobStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  RETRYING
 }

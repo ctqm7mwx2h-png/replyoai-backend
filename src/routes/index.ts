@@ -4,6 +4,9 @@ import { OnboardController } from '../controllers/onboard.controller.js';
 import { LicenseController } from '../controllers/license.controller.js';
 import { BusinessProfileController } from '../controllers/business-profile.controller.js';
 import { ConversationController } from '../controllers/conversation.controller.js';
+import { DashboardController } from '../controllers/dashboard.controller.js';
+import { BillingController } from '../controllers/billing.controller.js';
+import { InstallationController } from '../controllers/installation.controller.js';
 import { validateRequest } from '../middleware/validation.js';
 import { 
   onboardSchema, 
@@ -31,10 +34,22 @@ router.post('/get-business-data', validateRequest(getBusinessDataSchema), Busine
 // Fillout webhook endpoint (no validation - accepts any payload)
 router.post('/fillout-webhook', BusinessProfileController.handleFilloutWebhook);
 
-// Conversation engine endpoints
+// Conversation engine endpoints (multi-tenant safe)
 router.post('/conversation/message', ConversationController.processMessage);
 router.post('/conversation/reset', ConversationController.resetConversation);
-router.get('/conversation/stats', ConversationController.getStats);
+
+// Dashboard endpoints
+router.get('/dashboard/:ig_username', DashboardController.getDashboard);
+router.get('/dashboard/:ig_username/export', DashboardController.exportStats);
+
+// Billing endpoints
+router.get('/check-access/:ig_username', BillingController.checkAccess);
+router.post('/billing/webhook', BillingController.handleStripeWebhook);
+
+// Installation endpoints
+router.post('/install/trigger', InstallationController.triggerInstallation);
+router.get('/install/status/:businessId', InstallationController.getInstallationStatus);
+router.post('/install/mark-complete/:businessId', InstallationController.markInstallationComplete);
 
 // Health check endpoint
 router.get('/health', (_req, res) => {
