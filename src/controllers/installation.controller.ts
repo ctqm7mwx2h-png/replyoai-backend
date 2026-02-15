@@ -1,5 +1,6 @@
 import { Request, Response } from 'express';
 import { z } from 'zod';
+import { InstallationStatus } from '@prisma/client';
 
 const TriggerInstallSchema = z.object({
   businessId: z.string().uuid(),
@@ -47,7 +48,7 @@ export class InstallationController {
         data: {
           installation: {
             id: 'installation-123',
-            status: 'INSTALLED',
+            status: InstallationStatus.INSTALLED,
             webhookVerified: true,
             onboardingEmailsSent: 3,
             manualRequired: false,

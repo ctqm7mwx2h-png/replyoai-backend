@@ -3,6 +3,7 @@ import { z } from 'zod';
 import Stripe from 'stripe';
 import { config } from '../config/index.js';
 import { prisma } from '../models/index.js';
+import { SubscriptionStatus } from '@prisma/client';
 
 const stripe = new Stripe(config.stripe.secretKey, {
   apiVersion: '2023-10-16',
@@ -318,20 +319,20 @@ export class BillingController {
   /**
    * Map Stripe subscription status to our enum
    */
-  private static mapStripeStatus(stripeStatus: string): 'PENDING' | 'ACTIVE' | 'CANCELLED' | 'PAST_DUE' {
+  private static mapStripeStatus(stripeStatus: string): SubscriptionStatus {
     switch (stripeStatus) {
       case 'active':
-        return 'ACTIVE';
+        return SubscriptionStatus.ACTIVE;
       case 'past_due':
-        return 'PAST_DUE';
+        return SubscriptionStatus.PAST_DUE;
       case 'canceled':
       case 'cancelled':
-        return 'CANCELLED';
+        return SubscriptionStatus.CANCELLED;
       case 'incomplete':
       case 'incomplete_expired':
       case 'trialing':
       default:
-        return 'PENDING';
+        return SubscriptionStatus.PENDING;
     }
   }
 

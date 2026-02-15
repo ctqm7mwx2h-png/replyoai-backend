@@ -42,7 +42,8 @@ async function startWorkers(): Promise<void> {
           MetricsCollector.updateQueueLength('stats-aggregation', 0);
           MetricsCollector.updateQueueLength('onboarding-email', 0);
         } catch (error) {
-          jobLogger.error('Error updating queue metrics', error);
+          const err = error instanceof Error ? error : new Error(String(error));
+          jobLogger.error('Error updating queue metrics', err);
         }
       }, 30000); // Every 30 seconds
     }
@@ -50,7 +51,8 @@ async function startWorkers(): Promise<void> {
     defaultLogger.info('Background worker process initialized successfully');
 
   } catch (error) {
-    defaultLogger.error('Failed to start workers', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    defaultLogger.error('Failed to start workers', err);
     process.exit(1);
   }
 }
@@ -73,7 +75,8 @@ async function gracefulShutdown(signal: string): Promise<void> {
       defaultLogger.info('All workers closed successfully');
     }
   } catch (error) {
-    defaultLogger.error('Error during graceful shutdown', error);
+    const err = error instanceof Error ? error : new Error(String(error));
+    defaultLogger.error('Error during graceful shutdown', err);
   }
 
   process.exit(0);

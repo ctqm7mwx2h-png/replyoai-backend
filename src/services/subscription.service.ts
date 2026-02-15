@@ -1,4 +1,5 @@
 import { prisma } from '../models/index.js';
+import { SubscriptionStatus } from '@prisma/client';
 
 export class SubscriptionService {
   /**
@@ -16,14 +17,14 @@ export class SubscriptionService {
       update: {
         stripeSubscriptionId: stripeSubscriptionId ?? null,
         plan,
-        status: stripeSubscriptionId ? 'ACTIVE' : 'PENDING',
+        status: stripeSubscriptionId ? SubscriptionStatus.ACTIVE : SubscriptionStatus.PENDING,
         updatedAt: new Date(),
       },
       create: {
         stripeCustomerId,
         stripeSubscriptionId: stripeSubscriptionId ?? null,
         plan,
-        status: stripeSubscriptionId ? 'ACTIVE' : 'PENDING',
+        status: stripeSubscriptionId ? SubscriptionStatus.ACTIVE : SubscriptionStatus.PENDING,
       },
     });
   }
@@ -33,7 +34,7 @@ export class SubscriptionService {
    */
   static async updateSubscriptionStatus(
     stripeSubscriptionId: string,
-    status: 'PENDING' | 'ACTIVE' | 'CANCELLED' | 'PAST_DUE'
+    status: SubscriptionStatus
   ) {
     return await prisma.subscription.update({
       where: { stripeSubscriptionId },

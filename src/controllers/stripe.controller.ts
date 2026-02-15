@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 import { stripe } from '../utils/stripe.js';
 import { config } from '../config/index.js';
 import { SubscriptionService } from '../services/subscription.service.js';
+import { SubscriptionStatus } from '@prisma/client';
 
 export class StripeController {
   /**
@@ -140,21 +141,21 @@ export class StripeController {
   /**
    * Map Stripe status to our internal status
    */
-  private static mapStripeStatus(stripeStatus: string): 'PENDING' | 'ACTIVE' | 'CANCELLED' | 'PAST_DUE' {
+  private static mapStripeStatus(stripeStatus: string): SubscriptionStatus {
     switch (stripeStatus) {
       case 'active':
-        return 'ACTIVE';
+        return SubscriptionStatus.ACTIVE;
       case 'canceled':
       case 'cancelled':
-        return 'CANCELLED';
+        return SubscriptionStatus.CANCELLED;
       case 'past_due':
-        return 'PAST_DUE';
+        return SubscriptionStatus.PAST_DUE;
       case 'incomplete':
       case 'incomplete_expired':
       case 'trialing':
       case 'unpaid':
       default:
-        return 'PENDING';
+        return SubscriptionStatus.PENDING;
     }
   }
 }

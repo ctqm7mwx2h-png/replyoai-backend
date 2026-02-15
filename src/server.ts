@@ -108,7 +108,8 @@ async function testDatabaseConnection() {
     await prisma.$connect();
     defaultLogger.info('Database connected successfully');
   } catch (error) {
-    defaultLogger.error(`Database connection failed: ${error.message}`);
+    const err = error instanceof Error ? error : new Error(String(error));
+    defaultLogger.error(`Database connection failed: ${err.message}`);
     process.exit(1);
   }
 }
@@ -138,7 +139,8 @@ async function startServer() {
           defaultLogger.info('Server shutdown complete');
           process.exit(0);
         } catch (error) {
-          defaultLogger.error(`Error during shutdown: ${error.message}`);
+          const err = error instanceof Error ? error : new Error(String(error));
+          defaultLogger.error(`Error during shutdown: ${err.message}`);
           process.exit(1);
         }
       });
@@ -148,13 +150,15 @@ async function startServer() {
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
   } catch (error) {
-    defaultLogger.error(`Failed to start server: ${error.message}`);
+    const err = error instanceof Error ? error : new Error(String(error));
+    defaultLogger.error(`Failed to start server: ${err.message}`);
     process.exit(1);
   }
 }
 
 // Start the server
 startServer().catch((error) => {
-  defaultLogger.error(`Unhandled error during server startup: ${error.message}`);
+  const err = error instanceof Error ? error : new Error(String(error));
+  defaultLogger.error(`Unhandled error during server startup: ${err.message}`);
   process.exit(1);
 });

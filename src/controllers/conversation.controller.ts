@@ -29,7 +29,8 @@ export class ConversationController {
       });
 
     } catch (error) {
-      console.error('Conversation controller error:', error);
+      const err = error instanceof Error ? error : new Error(String(error));
+      console.error('Conversation controller error:', err);
       
       res.status(500).json({
         success: false,

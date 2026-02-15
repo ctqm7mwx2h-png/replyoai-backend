@@ -37,7 +37,8 @@ export class MetaWebhookController {
         message: 'Forbidden'
       });
     } catch (error) {
-      defaultLogger.error('Error in Meta webhook verification:', error);
+      const err = error instanceof Error ? error : new Error(String(error));
+      defaultLogger.error('Error in Meta webhook verification:', err);
       res.status(500).json({
         success: false,
         message: 'Internal server error'
@@ -69,7 +70,8 @@ export class MetaWebhookController {
         message: 'Webhook received'
       });
     } catch (error) {
-      defaultLogger.error('Error processing Meta webhook:', error);
+      const err = error instanceof Error ? error : new Error(String(error));
+      defaultLogger.error('Error processing Meta webhook:', err);
       
       // Still return 200 to prevent Meta from retrying
       res.status(200).json({
