@@ -22,12 +22,12 @@ export class StatsService {
     });
 
     const totalConversations = todayConversations.length;
-    const qualifiedLeads = todayConversations.filter(c => c.isQualified).length;
-    const bookingClicks = todayConversations.filter(c => c.hasBooked).length;
+    const qualifiedLeads = todayConversations.filter((c: any) => c.isQualified).length;
+    const bookingClicks = todayConversations.filter((c: any) => c.hasBooked).length;
 
     // Calculate response rate (conversations that got past START state)
     const responseRate = totalConversations > 0 
-      ? todayConversations.filter(c => c.currentState !== 'START').length / totalConversations 
+      ? todayConversations.filter((c: any) => c.currentState !== 'START').length / totalConversations 
       : 0;
 
     // Calculate conversion rate
@@ -35,7 +35,7 @@ export class StatsService {
 
     // Get most requested service
     const serviceCounts: Record<string, number> = {};
-    todayConversations.forEach(conv => {
+    todayConversations.forEach((conv: any) => {
       if (conv.leadService) {
         serviceCounts[conv.leadService] = (serviceCounts[conv.leadService] || 0) + 1;
       }
@@ -110,7 +110,7 @@ export class StatsService {
     }
 
     // Aggregate totals
-    const totals = stats.reduce((acc, stat) => ({
+    const totals = stats.reduce((acc: any, stat: any) => ({
       conversations: acc.conversations + stat.totalConversations,
       qualifiedLeads: acc.qualifiedLeads + stat.qualifiedLeads,
       bookingClicks: acc.bookingClicks + stat.bookingClicks,
@@ -126,7 +126,7 @@ export class StatsService {
 
     // Get most common service across the period
     const serviceCounts: Record<string, number> = {};
-    stats.forEach(stat => {
+    stats.forEach((stat: any) => {
       if (stat.mostRequestedService) {
         serviceCounts[stat.mostRequestedService] = 
           (serviceCounts[stat.mostRequestedService] || 0) + 1;
@@ -140,10 +140,10 @@ export class StatsService {
     const last7Days = stats.slice(0, 7);
     const previous7Days = stats.slice(7, 14);
 
-    const last7Total = last7Days.reduce((acc, s) => acc + s.totalConversations, 0);
-    const last7Bookings = last7Days.reduce((acc, s) => acc + s.bookingClicks, 0);
-    const prev7Total = previous7Days.reduce((acc, s) => acc + s.totalConversations, 0);
-    const prev7Bookings = previous7Days.reduce((acc, s) => acc + s.bookingClicks, 0);
+    const last7Total = last7Days.reduce((acc: number, s: any) => acc + s.totalConversations, 0);
+    const last7Bookings = last7Days.reduce((acc: number, s: any) => acc + s.bookingClicks, 0);
+    const prev7Total = previous7Days.reduce((acc: number, s: any) => acc + s.totalConversations, 0);
+    const prev7Bookings = previous7Days.reduce((acc: number, s: any) => acc + s.bookingClicks, 0);
 
     const conversationTrend = prev7Total > 0 ? 
       ((last7Total - prev7Total) / prev7Total) * 100 : 0;
@@ -161,7 +161,7 @@ export class StatsService {
         conversations: Math.round(conversationTrend * 100) / 100,
         bookings: Math.round(bookingTrend * 100) / 100
       },
-      dailyStats: stats.map(stat => ({
+      dailyStats: stats.map((stat: any) => ({
         date: stat.date,
         conversations: stat.totalConversations,
         bookings: stat.bookingClicks,
@@ -198,7 +198,7 @@ export class StatsService {
       }
     });
 
-    return stats.map(stat => ({
+    return stats.map((stat: any) => ({
       businessId: stat.businessId,
       conversations: stat._sum.totalConversations || 0,
       qualifiedLeads: stat._sum.qualifiedLeads || 0,

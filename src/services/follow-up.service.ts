@@ -1,5 +1,5 @@
 import { ConversationPersistenceService } from './conversation-persistence.service.js';
-import { ConversationEngine } from '../conversations/engine.js';
+import { ConversationEngine } from '../conversations/engine';
 import { beautyFlow } from '../conversations/templates/beauty.js';
 import { hairFlow } from '../conversations/templates/hair.js';
 import { ConversationFlow } from '../conversations/types.js';

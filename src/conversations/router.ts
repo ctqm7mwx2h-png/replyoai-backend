@@ -1,4 +1,4 @@
-import { ConversationEngine } from './engine.js';
+import { ConversationEngine } from './engine';
 import { 
   ConversationResult,
   ConversationSession,

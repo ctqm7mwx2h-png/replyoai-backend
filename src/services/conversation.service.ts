@@ -100,7 +100,7 @@ export class ConversationService {
         select: { igUsername: true }
       });
 
-      return profiles.map(p => p.igUsername);
+      return profiles.map((p: { igUsername: string }) => p.igUsername);
 
     } catch (error) {
       console.error('Error fetching business usernames:', error);

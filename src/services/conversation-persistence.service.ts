@@ -170,12 +170,12 @@ export class ConversationPersistenceService {
       }
     });
 
-    const qualifiedLeads = conversations.filter(c => c.isQualified).length;
-    const bookingClicks = conversations.filter(c => c.hasBooked).length;
+    const qualifiedLeads = conversations.filter((c: any) => c.isQualified).length;
+    const bookingClicks = conversations.filter((c: any) => c.hasBooked).length;
 
     // Get most requested service
     const serviceCounts: Record<string, number> = {};
-    conversations.forEach(conv => {
+    conversations.forEach((conv: any) => {
       if (conv.leadService) {
         serviceCounts[conv.leadService] = (serviceCounts[conv.leadService] || 0) + 1;
       }

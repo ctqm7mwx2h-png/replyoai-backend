@@ -22,6 +22,11 @@ export const config = {
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
   },
   
+  // Meta (Facebook/Instagram)
+  meta: {
+    verifyToken: process.env.META_VERIFY_TOKEN!,
+  },
+  
   // Sentry
   sentry: {
     dsn: process.env.SENTRY_DSN || null,
@@ -82,6 +87,7 @@ function validateConfig() {
     'DATABASE_URL',
     'STRIPE_SECRET_KEY',
     'STRIPE_WEBHOOK_SECRET',
+    'META_VERIFY_TOKEN',
   ] as const;
 
   const missing = required.filter(key => !process.env[key]);

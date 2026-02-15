@@ -7,6 +7,7 @@ import { ConversationController } from '../controllers/conversation.controller.j
 import { DashboardController } from '../controllers/dashboard.controller.js';
 import { BillingController } from '../controllers/billing.controller.js';
 import { InstallationController } from '../controllers/installation.controller.js';
+import { MetaWebhookController } from '../controllers/meta.webhook.controller.js';
 import { validateRequest } from '../middleware/validation.js';
 import { 
   onboardSchema, 
@@ -19,6 +20,10 @@ const router = Router();
 
 // Stripe webhooks (raw body needed for signature verification)
 router.post('/webhooks/stripe', StripeController.handleWebhook);
+
+// Meta webhooks (Facebook/Instagram)
+router.get('/webhook/meta', MetaWebhookController.verifyWebhook);
+router.post('/webhook/meta', MetaWebhookController.handleWebhook);
 
 // Onboarding endpoint (for subscription creation)
 router.post('/onboard', validateRequest(onboardSchema), OnboardController.onboard);

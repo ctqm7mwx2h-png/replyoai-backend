@@ -5,9 +5,11 @@
   "main": "dist/server.js",
   "scripts": {
     "dev": "tsx watch src/server.ts",
+    "dev:worker": "tsx watch src/workers/index.ts",
     "build": "tsc",
     "start": "node dist/server.js",
-    "worker": "node dist/workers/index.js",
+    "start:worker": "node dist/workers/index.js",
+    "start:all": "concurrently \"npm start\" \"npm run start:worker\"",
     "test": "jest",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -16,8 +18,12 @@
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
+    "db:reset": "prisma migrate reset",
     "lint": "tsc --noEmit",
-    "metrics": "curl http://localhost:3000/metrics"
+    "lint:fix": "prettier --write src/",
+    "metrics": "curl http://localhost:3000/metrics",
+    "health": "curl http://localhost:3000/health",
+    "precommit": "npm run lint && npm test"
   },
   "keywords": [
     "access-control",
@@ -56,7 +62,9 @@
     "@types/node": "^20.10.6",
     "@types/nodemailer": "^6.4.14",
     "@types/supertest": "^6.0.2",
+    "concurrently": "^8.2.2",
     "jest": "^29.7.0",
+    "prettier": "^3.1.1",
     "supertest": "^6.3.3",
     "ts-jest": "^29.1.1",
     "tsx": "^4.7.0",
