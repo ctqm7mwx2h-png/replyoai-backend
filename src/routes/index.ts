@@ -8,6 +8,7 @@ import { DashboardController } from '../controllers/dashboard.controller.js';
 import { BillingController } from '../controllers/billing.controller.js';
 import { InstallationController } from '../controllers/installation.controller.js';
 import { MetaWebhookController } from '../controllers/meta.webhook.controller.js';
+import { MetaOAuthController } from '../controllers/meta.oauth.controller.js';
 import { validateRequest } from '../middleware/validation.js';
 import { 
   onboardSchema, 
@@ -24,6 +25,9 @@ router.post('/webhooks/stripe', StripeController.handleWebhook);
 // Meta webhooks (Facebook/Instagram)
 router.get('/webhook/meta', MetaWebhookController.verifyWebhook);
 router.post('/webhook/meta', MetaWebhookController.handleWebhook);
+
+// Meta OAuth (Instagram connection)
+router.get('/meta/oauth/callback', MetaOAuthController.handleCallback);
 
 // Onboarding endpoint (for subscription creation)
 router.post('/onboard', validateRequest(onboardSchema), OnboardController.onboard);

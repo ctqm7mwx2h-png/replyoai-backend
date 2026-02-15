@@ -25,6 +25,9 @@ export const config = {
   // Meta (Facebook/Instagram)
   meta: {
     verifyToken: process.env.META_VERIFY_TOKEN!,
+    appId: process.env.META_APP_ID!,
+    appSecret: process.env.META_APP_SECRET!,
+    redirectUri: process.env.META_REDIRECT_URI!,
   },
   
   // Sentry
@@ -88,6 +91,9 @@ function validateConfig() {
     'STRIPE_SECRET_KEY',
     'STRIPE_WEBHOOK_SECRET',
     'META_VERIFY_TOKEN',
+    'META_APP_ID',
+    'META_APP_SECRET',
+    'META_REDIRECT_URI',
   ] as const;
 
   const missing = required.filter(key => !process.env[key]);

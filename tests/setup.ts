@@ -7,6 +7,9 @@ process.env.REDIS_URL = 'redis://localhost:6380';
 process.env.STRIPE_SECRET_KEY = 'sk_test_mock_key';
 process.env.STRIPE_WEBHOOK_SECRET = 'whsec_mock_secret';
 process.env.META_VERIFY_TOKEN = 'test_verify_token_12345';
+process.env.META_APP_ID = 'test_meta_app_id';
+process.env.META_APP_SECRET = 'test_meta_app_secret';
+process.env.META_REDIRECT_URI = 'http://localhost:3000/api/meta/oauth/callback';
 
 // Mock external services during testing
 jest.mock('../src/utils/stripe.ts', () => ({

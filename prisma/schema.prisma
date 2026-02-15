@@ -35,6 +35,7 @@ model BusinessProfile {
   industry            String?
   avgOrderValue       Float?   @map("avg_order_value") // Per-business AOV override
   conversionMultiplier Float?  @map("conversion_multiplier") // Business-specific conversion rate
+  instagramAccessToken String? @map("instagram_access_token") // Long-lived Instagram access token
   createdAt           DateTime @default(now()) @map("created_at")
   updatedAt           DateTime @updatedAt @map("updated_at")
 
