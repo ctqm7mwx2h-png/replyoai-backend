@@ -1,32 +1,71 @@
 // Universal conversation types for all industries
+
+/**
+ * Business data interface for conversation templates
+ */
+export interface BusinessData {
+  business_name?: string;
+  phone?: string;
+  location?: string;
+  hours?: string;
+  booking_link?: string;
+  website?: string;
+  email?: string;
+  [key: string]: any; // Allow additional custom fields
+}
+
+/**
+ * Conversation session data and lead information
+ */
+export interface ConversationData {
+  conversationId?: string;
+  leadData?: Record<string, any>;
+  followUpCount?: number;
+  isQualified?: boolean;
+  platform?: string;
+  payload?: Record<string, any>; // Payload for state transitions
+  [key: string]: any; // Allow additional custom fields
+}
+
+/**
+ * Quick reply button with optional payload for structured data
+ */
 export interface QuickReply {
   title: string;
   next: string;
   action?: 'qualify' | 'book' | 'location' | 'question';
+  payload?: Record<string, any>; // Structured data payload
 }
 
-export interface ConversationState {
-  message: string | ((businessData: any, conversationData?: any) => string);
+/**
+ * Conversation flow state definition
+ */
+export interface FlowState {
+  message: string | ((businessData: BusinessData, conversationData?: ConversationData) => string | Promise<string>);
   quickReplies?: QuickReply[];
   isQualifying?: boolean; // Indicates this state collects lead data
   qualificationField?: string; // Field to store in lead data
+  phoneValidation?: boolean; // Enables phone number validation
   isBookingState?: boolean; // Indicates this is a booking conversion point
   followUpAfterHours?: number; // Auto follow-up if no response
 }
 
-export interface ConversationFlow {
+// Legacy interface for backward compatibility
+export interface ConversationState extends FlowState {}
+
+/**
+ * Conversation flow type with required states
+ */
+export type ConversationFlow = Record<string, FlowState> & {
   // Required states for all industries
-  START: ConversationState;
-  QUALIFY: ConversationState;
-  BOOK: ConversationState;
-  PRICES: ConversationState;
-  LOCATION: ConversationState;
-  QUESTION: ConversationState;
-  FOLLOW_UP: ConversationState;
-  END: ConversationState;
-  
-  // Optional industry-specific states
-  [key: string]: ConversationState;
+  START: FlowState;
+  QUALIFY: FlowState;
+  BOOK: FlowState;
+  PRICES: FlowState;
+  LOCATION: FlowState;
+  QUESTION: FlowState;
+  FOLLOW_UP: FlowState;
+  END: FlowState;
 }
 
 export interface ConversationResult {
@@ -48,6 +87,7 @@ export interface ConversationSession {
   leadData: Record<string, string>;
   isQualified: boolean;
   hasBooked: boolean;
+  payload?: Record<string, any>; // Payload for state data
 }
 
 // Intent detection patterns for natural language processing

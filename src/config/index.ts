@@ -21,6 +21,11 @@ export const config = {
     secretKey: process.env.STRIPE_SECRET_KEY!,
     webhookSecret: process.env.STRIPE_WEBHOOK_SECRET!,
   },
+
+  // Resend (Email)
+  resend: {
+    apiKey: process.env.RESEND_API_KEY || '',
+  },
   
   // Meta (Facebook/Instagram)
   meta: {
@@ -90,6 +95,7 @@ function validateConfig() {
     'DATABASE_URL',
     'STRIPE_SECRET_KEY',
     'STRIPE_WEBHOOK_SECRET',
+    'RESEND_API_KEY',
     'META_VERIFY_TOKEN',
     'META_APP_ID',
     'META_APP_SECRET',

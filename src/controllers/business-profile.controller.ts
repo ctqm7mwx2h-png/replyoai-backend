@@ -156,7 +156,15 @@ export class BusinessProfileController {
    * Fillout webhook handler - robust extraction for any payload structure
    * POST /api/fillout-webhook
    */
+  // Deprecated: Fillout onboarding removed Q1 2026
   static async handleFilloutWebhook(req: Request, res: Response): Promise<void> {
+    // Return 410 Gone - endpoint deprecated
+    res.status(410).json({
+      error: "Fillout webhook deprecated"
+    });
+    return;
+
+    // Legacy code preserved below (unreachable)
     try {
       const payload = req.body;
       

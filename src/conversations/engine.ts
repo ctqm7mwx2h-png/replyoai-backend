@@ -33,6 +33,28 @@ export class ConversationEngine {
         currentState.qualificationField, 
         userInput
       );
+      
+      // Special handling for phone validation
+      if (currentState.phoneValidation && currentState.qualificationField === 'phone') {
+        const phoneMatch = this.extractPhoneNumber(userInput);
+        if (phoneMatch) {
+          qualificationData.phone = phoneMatch;
+        } else {
+          // Invalid phone - return to REQUEST_PHONE with error
+          return {
+            state: session.currentState,
+            message: this.generateMessage(nextStateDefinition, businessData, {
+              ...session,
+              payload: { ...session.payload, phone_invalid: true }
+            }),
+            quickReplies: nextStateDefinition.quickReplies,
+            shouldQualify: true,
+            qualificationData: { phone_invalid: 'true' },
+            isBookingAttempt: false,
+            shouldFollowUp: false
+          };
+        }
+      }
     }
 
     // Generate contextual response
@@ -109,13 +131,31 @@ export class ConversationEngine {
     return null;
   }
 
-  /**
-   * Extract qualification data from user input
+  /**   * Extract and validate UK phone number from user input
+   */
+  private static extractPhoneNumber(input: string): string | null {
+    // UK phone number regex: +44 or 0 followed by 10 digits, or international format
+    const phoneRegex = /^\+?(?:44|0)?\s*(?:\(?0?\)?\s*)?([1-9]\d{8,9})$/;
+    const generalPhoneRegex = /^\+?\d{7,15}$/;
+    
+    const cleanInput = input.replace(/[\s\-\(\)]/g, '');
+    
+    if (phoneRegex.test(cleanInput) || generalPhoneRegex.test(cleanInput)) {
+      return cleanInput;
+    }
+    
+    return null;
+  }
+
+  /**   * Extract qualification data from user input
    */
   private static extractQualificationValue(field: string, input: string): string {
     const normalized = input.toLowerCase().trim();
     
     switch (field) {
+      case 'phone':
+        return this.extractPhoneNumber(input) || input;
+        
       case 'lead_urgency':
         if (INTENT_PATTERNS.URGENCY.HIGH.some(pattern => normalized.includes(pattern))) {
           return 'today';

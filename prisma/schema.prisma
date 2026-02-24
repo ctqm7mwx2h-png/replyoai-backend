@@ -14,10 +14,15 @@ model Subscription {
   id                    String   @id @default(uuid())
   stripeCustomerId      String   @unique @map("stripe_customer_id")
   stripeSubscriptionId  String?  @unique @map("stripe_subscription_id")
+  businessProfileId     String?  @unique @map("business_profile_id")
+  customerEmail         String?  @map("customer_email")
   status                SubscriptionStatus @default(PENDING)
   plan                  String   // "basic" | "premium"
   createdAt             DateTime @default(now()) @map("created_at")
   updatedAt             DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  businessProfile       BusinessProfile? @relation(fields: [businessProfileId], references: [id])
 
   @@map("subscriptions")
 }
@@ -44,6 +49,8 @@ model BusinessProfile {
   stats              BusinessStats[]
   installations      Installation[]
   aggregatedStats    AggregatedStats[]
+  hotLeads           HotLead[]
+  subscription       Subscription?
 
   @@map("business_profiles")
 }
@@ -67,6 +74,7 @@ model Conversation {
   // Relations
   business           BusinessProfile @relation(fields: [businessId], references: [id])
   messages           ConversationMessage[]
+  hotLeads           HotLead[]
 
   @@map("conversations")
   @@index([businessId])
@@ -198,4 +206,50 @@ enum JobStatus {
   COMPLETED
   FAILED
   RETRYING
+}
+
+model HotLead {
+  id                  String   @id @default(uuid())
+  businessId          String   @map("business_id")
+  conversationId      String?  @map("conversation_id") // Optional: link to conversation
+  userId              String   @map("user_id") // Instagram user ID
+  score               Int      // Lead score (0-100)
+  phone               String?  // Customer phone number if provided
+  urgency             String?  // Emergency, immediate, this_week, etc.
+  serviceTier         String?  @map("service_tier") // Premium, standard, basic
+  vehicleType         String?  @map("vehicle_type") // For detailing
+  propertyType        String?  @map("property_type") // For cleaning
+  recurringInterest   String?  @map("recurring_interest") // Yes, no, interested
+  maintenancePlan     String?  @map("maintenance_plan") // Platinum, gold, etc.
+  coatingInterest     String?  @map("coating_interest") // Full suite, coating only
+  priority            String?  // Platinum, gold, standard
+  notificationSent    Boolean  @default(false) @map("notification_sent")
+  webhookSuccess      Boolean  @default(false) @map("webhook_success")
+  smsSuccess          Boolean  @default(false) @map("sms_success")
+  notificationError   String?  @map("notification_error") // Error message if notification failed
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  business            BusinessProfile @relation(fields: [businessId], references: [id])
+  conversation        Conversation? @relation(fields: [conversationId], references: [id])
+
+  @@map("hot_leads")
+  @@index([businessId])
+  @@index([score])
+  @@index([createdAt])
+  @@index([userId])
+  @@index([notificationSent])
+}
+
+model StripeEvent {
+  id            String   @id // Stripe event ID
+  eventType     String   @map("event_type")
+  processed     Boolean  @default(true)
+  processedAt   DateTime @default(now()) @map("processed_at")
+  data          Json?    // Store event data for debugging
+
+  @@map("stripe_events")
+  @@index([eventType])
+  @@index([processedAt])
 }
