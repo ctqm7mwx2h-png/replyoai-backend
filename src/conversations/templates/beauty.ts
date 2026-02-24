@@ -841,3 +841,24 @@ export function createDefaultBeautyFlow(
   const config = { ...defaultBeautyConfig, ...configOverrides };
   return createBeautyFlow(config, adapters);
 }
+
+/**
+ * Default beauty flow instance for backward compatibility
+ * @deprecated Use createBeautyFlow or createDefaultBeautyFlow instead
+ */
+export const beautyFlow = createDefaultBeautyFlow({
+  // Stub adapters for backward compatibility
+  saveLead: async () => {},
+  computeScore: () => 0,
+  isHot: () => false,
+  notifyOwner: async () => {},
+  generateBookingLink: async () => '',
+  generateDepositLink: async () => '',
+  scheduleSlotRelease: async () => {},
+  scheduleEscalation: async () => {},
+  sendPhoneReminder: async () => {},
+  validateUrl: () => false,
+  metrics: {
+    trackEvent: async () => {}
+  }
+});

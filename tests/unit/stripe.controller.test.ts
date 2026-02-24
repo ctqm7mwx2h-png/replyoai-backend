@@ -17,7 +17,7 @@ jest.mock('../../src/models/index.js', () => ({
     subscription: {
       upsert: jest.fn(),
     },
-  },
+  } as any, // Type assertion to avoid TypeScript editor issues
 }));
 
 jest.mock('../../src/utils/stripe.js', () => ({
@@ -102,7 +102,7 @@ describe('StripeController', () => {
       (stripe.webhooks.constructEvent as jest.Mock).mockReturnValue(mockEvent);
       
       // Mock existing event check (not found)
-      (prisma.stripeEvent.findUnique as jest.Mock).mockResolvedValue(null);
+      ((prisma as any).stripeEvent.findUnique as jest.Mock).mockResolvedValue(null);
       
       // Mock business profile lookup (not found, so will create new)
       (prisma.businessProfile.findFirst as jest.Mock).mockResolvedValue(null);
@@ -122,7 +122,7 @@ describe('StripeController', () => {
       });
       
       // Mock event storage
-      (prisma.stripeEvent.create as jest.Mock).mockResolvedValue({});
+      ((prisma as any).stripeEvent.create as jest.Mock).mockResolvedValue({});
       
       // Mock onboarding email scheduling
       (sendOnboardingEmail as jest.Mock).mockResolvedValue(true);
@@ -167,7 +167,7 @@ describe('StripeController', () => {
       expect(sendOnboardingEmail).toHaveBeenCalledWith('profile_123', 'test@example.com');
 
       // Verify event stored for idempotency
-      expect(prisma.stripeEvent.create).toHaveBeenCalledWith({
+      expect((prisma as any).stripeEvent.create).toHaveBeenCalledWith({
         data: {
           id: 'evt_test_123',
           eventType: 'checkout.session.completed',
@@ -188,7 +188,7 @@ describe('StripeController', () => {
       (stripe.webhooks.constructEvent as jest.Mock).mockReturnValue(mockEvent);
       
       // Mock existing event found
-      (prisma.stripeEvent.findUnique as jest.Mock).mockResolvedValue({
+      ((prisma as any).stripeEvent.findUnique as jest.Mock).mockResolvedValue({
         id: 'evt_test_123',
         processed: true,
       });
@@ -223,10 +223,10 @@ describe('StripeController', () => {
       (stripe.webhooks.constructEvent as jest.Mock).mockReturnValue(mockEvent);
       
       // Mock existing event check (not found)
-      (prisma.stripeEvent.findUnique as jest.Mock).mockResolvedValue(null);
+      ((prisma as any).stripeEvent.findUnique as jest.Mock).mockResolvedValue(null);
       
       // Mock event storage
-      (prisma.stripeEvent.create as jest.Mock).mockResolvedValue({});
+      ((prisma as any).stripeEvent.create as jest.Mock).mockResolvedValue({});
 
       await StripeController.handleWebhook(req as Request, res as Response);
 
@@ -241,7 +241,7 @@ describe('StripeController', () => {
       expect(sendOnboardingEmail).not.toHaveBeenCalled();
       
       // But event should still be stored
-      expect(prisma.stripeEvent.create).toHaveBeenCalled();
+      expect((prisma as any).stripeEvent.create).toHaveBeenCalled();
     });
   });
 });

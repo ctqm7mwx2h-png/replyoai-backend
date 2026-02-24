@@ -1,8 +1,14 @@
 import { ConversationPersistenceService } from './conversation-persistence.service.js';
 import { ConversationEngine } from '../conversations/engine';
-import { beautyFlow } from '../conversations/templates/beauty.js';
+import { createDefaultBeautyFlow } from '../conversations/templates/beauty.js';
 import { hairFlow } from '../conversations/templates/hair.js';
 import { ConversationFlow } from '../conversations/types.js';
+import { computeScore, isHot } from './score.js';
+import { notifyOwner } from './notifications.js';
+import { saveLead } from './leads.js';
+import { validateUrl } from '../utils/validateUrl.js';
+import { generateCalendlyLink } from '../utils/calendly.js';
+import { trackEvent } from './analytics.js';
 
 export class FollowUpService {
   /**
@@ -94,7 +100,41 @@ export class FollowUpService {
       case 'spa':
       case 'cosmetics':
       default:
-        return beautyFlow;
+        // Create beauty flow with proper adapters for follow-up service
+        return createDefaultBeautyFlow({
+          // Lead management
+          saveLead: async (tenantId: string, leadData: any) => {
+            // Wrapper to match expected signature
+            await saveLead(tenantId, leadData);
+          },
+          // Scoring
+          computeScore,
+          isHot,
+          // Notifications
+          notifyOwner: async (tenantId: string, leadData: any, score: number, phone?: string) => {
+            await notifyOwner(tenantId, leadData, score, phone);
+          },
+          // Booking
+          generateBookingLink: async (tenantId: string, options: { service: string }) => {
+            // Wrapper to handle nullability
+            const link = await generateCalendlyLink(tenantId, { service: options.service });
+            return link || '';
+          },
+          // Payment processing - stubs for now
+          generateDepositLink: async (_tenantId: string, _leadData: any, _amount: number) => '',
+          scheduleSlotRelease: async (_tenantId: string, _leadId: string, _minutes: number) => {},
+          // Escalation & reminders - stubs for now
+          scheduleEscalation: async (_tenantId: string, _leadId: string, _minutes: number) => {},
+          sendPhoneReminder: async (_tenantId: string, _conversationId: string, _hours: number) => {},
+          // Utilities
+          validateUrl,
+          // Metrics
+          metrics: {
+            trackEvent: async (tenantId: string, event: string, data?: Record<string, unknown>) => {
+              await trackEvent(tenantId, event, data);
+            }
+          }
+        });
     }
   }
 

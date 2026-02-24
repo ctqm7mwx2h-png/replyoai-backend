@@ -113,6 +113,20 @@ export class BusinessProfileController {
     try {
       const { ig_username } = req.body;
 
+      // Validate required parameter
+      if (!ig_username || typeof ig_username !== 'string') {
+        const response: ApiResponse = {
+          success: false,
+          message: 'Instagram username is required',
+          errors: [{
+            path: 'ig_username',
+            message: 'Instagram username must be provided as a string'
+          }]
+        };
+        res.status(400).json(response);
+        return;
+      }
+
       const businessProfile = await BusinessProfileService.getBusinessProfile(ig_username);
 
       if (!businessProfile) {
@@ -283,7 +297,7 @@ export class BusinessProfileController {
         igUsername = searchForAtSymbol(payload);
       }
 
-      // If no Instagram username found, return success with message
+      // Validation: Instagram username is required
       if (!igUsername) {
         console.log('Fillout webhook: Instagram username not found in payload');
         res.status(200).json({
@@ -379,10 +393,34 @@ export class BusinessProfileController {
         ['location', 'address', 'city', 'where']
       );
 
-      // Prepare data for database
-      const profileData = {
-        ig_username: igUsername,
-        business_name: businessName || igUsername, // Use ig_username as fallback
+      // Validation with proper type narrowing and variable creation
+      if (!igUsername || typeof igUsername !== 'string') {
+        throw new Error('Instagram username is required but was undefined');
+      }
+      
+      const tempBusinessName = businessName || igUsername;
+      if (!tempBusinessName || typeof tempBusinessName !== 'string') {
+        throw new Error('Business name is required but was undefined');
+      }
+
+      // Create properly typed variables after validation (using ! since we validated above)
+      const validIgUsername = igUsername!;
+      const validBusinessName = tempBusinessName!;
+
+      // Prepare data for database with validated required fields
+      const profileData: {
+        ig_username: string;
+        business_name: string;
+        booking_link?: string;
+        industry?: string;
+        email?: string;
+        phone?: string;
+        location?: string;
+        hours?: string;
+        tone?: string;
+      } = {
+        ig_username: validIgUsername,
+        business_name: validBusinessName,
         booking_link: bookingLink || undefined,
         industry: industry || undefined,
         email: email || undefined,

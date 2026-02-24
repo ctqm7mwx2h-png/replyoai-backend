@@ -4,7 +4,7 @@ import {
   ConversationSession,
   ConversationFlow
 } from './types.js';
-import { beautyFlow } from './templates/beauty.js';
+import { createDefaultBeautyFlow } from './templates/beauty.js';
 import { hairFlow } from './templates/hair.js';
 import { fitnessFlow } from './templates/fitness.js';
 import { cleaningFlow } from './templates/cleaning.js';
@@ -14,6 +14,12 @@ import { detailingFlow } from './templates/detailing.js';
 import { ConversationService } from '../services/conversation.service.js';
 import { ConversationPersistenceService } from '../services/conversation-persistence.service.js';
 import { StatsService } from '../services/stats.service.js';
+import { computeScore, isHot } from '../services/score.js';
+import { notifyOwner } from '../services/notifications.js';
+import { saveLead } from '../services/leads.js';
+import { validateUrl } from '../utils/validateUrl.js';
+import { generateCalendlyLink } from '../utils/calendly.js';
+import { trackEvent } from '../services/analytics.js';
 
 export class ConversationRouter {
   private static sessions = new Map<string, ConversationSession>();
@@ -155,7 +161,41 @@ export class ConversationRouter {
       case 'spa':
       case 'cosmetics':
       default:
-        return beautyFlow;
+        // Create beauty flow with proper adapters
+        return createDefaultBeautyFlow({
+          // Lead management
+          saveLead: async (tenantId: string, leadData: any) => {
+            // Wrapper to match expected signature
+            await saveLead(tenantId, leadData);
+          },
+          // Scoring
+          computeScore,
+          isHot,
+          // Notifications
+          notifyOwner: async (tenantId: string, leadData: any, score: number, phone?: string) => {
+            await notifyOwner(tenantId, leadData, score, phone);
+          },
+          // Booking
+          generateBookingLink: async (tenantId: string, options: { service: string }) => {
+            // Wrapper to handle nullability
+            const link = await generateCalendlyLink(tenantId, { service: options.service });
+            return link || '';
+          },
+          // Payment processing - stubs for now
+          generateDepositLink: async (_tenantId: string, _leadData: any, _amount: number) => '',
+          scheduleSlotRelease: async (_tenantId: string, _leadId: string, _minutes: number) => {},
+          // Escalation & reminders - stubs for now
+          scheduleEscalation: async (_tenantId: string, _leadId: string, _minutes: number) => {},
+          sendPhoneReminder: async (_tenantId: string, _conversationId: string, _hours: number) => {},
+          // Utilities
+          validateUrl,
+          // Metrics
+          metrics: {
+            trackEvent: async (tenantId: string, event: string, data?: Record<string, unknown>) => {
+              await trackEvent(tenantId, event, data);
+            }
+          }
+        });
     }
   }
 
