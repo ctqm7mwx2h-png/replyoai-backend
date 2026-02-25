@@ -144,8 +144,9 @@ describe('StripeController', () => {
 
       // Verify subscription creation
       expect(prisma.subscription.upsert).toHaveBeenCalledWith({
-        where: { stripeCustomerId: 'cus_test_customer' },
+        where: { stripeSubscriptionId: 'sub_test_subscription' },
         update: {
+          stripeCustomerId: 'cus_test_customer',
           stripeSubscriptionId: 'sub_test_subscription',
           businessProfileId: 'profile_123',
           customerEmail: 'test@example.com',

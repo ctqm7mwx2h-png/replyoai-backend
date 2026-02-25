@@ -168,9 +168,15 @@ export class StripeController {
       }
 
       // Create or update subscription linked to business profile
+      // Use stripeSubscriptionId as primary unique identifier to prevent duplicates
+      const whereClause = subscriptionId ? 
+        { stripeSubscriptionId: subscriptionId } : 
+        { stripeCustomerId: customerId };
+      
       const subscription = await prisma.subscription.upsert({
-        where: { stripeCustomerId: customerId },
+        where: whereClause,
         update: {
+          stripeCustomerId: customerId,
           stripeSubscriptionId: subscriptionId,
           businessProfileId: businessProfile.id,
           customerEmail: customerEmail,

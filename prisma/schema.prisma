@@ -14,7 +14,7 @@ model Subscription {
   id                    String   @id @default(uuid())
   stripeCustomerId      String   @unique @map("stripe_customer_id")
   stripeSubscriptionId  String?  @unique @map("stripe_subscription_id")
-  businessProfileId     String?  @unique @map("business_profile_id")
+  businessProfileId     String?  @map("business_profile_id")
   customerEmail         String?  @map("customer_email")
   status                SubscriptionStatus @default(PENDING)
   plan                  String   // "basic" | "premium"
@@ -50,7 +50,7 @@ model BusinessProfile {
   installations      Installation[]
   aggregatedStats    AggregatedStats[]
   hotLeads           HotLead[]
-  subscription       Subscription?
+  subscriptions      Subscription[]
 
   @@map("business_profiles")
 }
