@@ -114,10 +114,76 @@ async function testDatabaseConnection() {
   }
 }
 
+// Database schema synchronization
+async function syncDatabaseSchema() {
+  try {
+    defaultLogger.info('Synchronizing database schema...');
+    
+    // Check if we should run schema sync
+    const shouldSync = process.env.NODE_ENV === 'production' || 
+                      process.env.AUTO_DB_SYNC === 'true' ||
+                      process.env.DATABASE_URL?.includes('postgresql://'); // Auto-sync for production databases
+    
+    if (!shouldSync) {
+      defaultLogger.info('Skipping database schema sync (development mode)');
+      return;
+    }
+    
+    // Use child_process with proper error handling and timeout
+    const { execSync } = await import('child_process');
+    
+    try {
+      // Run prisma db push programmatically with proper options
+      const output = execSync('npx prisma db push --accept-data-loss --skip-generate', {
+        cwd: process.cwd(),
+        stdio: ['pipe', 'pipe', 'pipe'],
+        env: { 
+          ...process.env,
+          // Ensure Prisma can find the schema
+          PRISMA_SCHEMA_ENGINE_BINARY: undefined, // Let Prisma auto-detect
+        },
+        timeout: 60000, // 60 second timeout
+        encoding: 'utf8',
+      });
+      
+      defaultLogger.info('Database schema synchronized successfully');
+      if (output && output.trim()) {
+        defaultLogger.debug('Prisma db push output:', { output: output.trim() });
+      }
+      
+    } catch (execError: any) {
+      // Handle specific Prisma errors gracefully
+      const errorOutput = execError.stderr?.toString() || execError.message || 'Unknown error';
+      
+      if (errorOutput.includes('database schema is already in sync')) {
+        defaultLogger.info('Database schema is already synchronized');
+      } else if (errorOutput.includes('No changes found')) {
+        defaultLogger.info('No database schema changes needed');
+      } else {
+        throw execError; // Re-throw if it's a real error
+      }
+    }
+    
+  } catch (error) {
+    const err = error instanceof Error ? error : new Error(String(error));
+    defaultLogger.warn(`Database schema sync failed: ${err.message}`);
+    
+    // Check if database is accessible at all
+    try {
+      await prisma.$queryRaw`SELECT 1 as test`;
+      defaultLogger.info('Database is accessible - continuing startup (schema may already be current)');
+    } catch (dbError) {
+      defaultLogger.error('Database is not accessible - this may cause application issues');
+      // Still continue startup to allow debugging
+    }
+  }
+}
+
 // Start server
 async function startServer() {
   try {
     await testDatabaseConnection();
+    await syncDatabaseSchema();
     
     const server = app.listen(config.port, () => {
       defaultLogger.info('Server started successfully', {
